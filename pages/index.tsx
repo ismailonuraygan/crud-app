@@ -4,6 +4,9 @@ import Image from 'next/image'
 import { useState } from 'react'
 import styles from '../styles/Home.module.css'
 import {prisma} from '../lib/prisma' 
+import { useRouter } from 'next/router';
+
+
 
 interface FormData {
   title:  string
@@ -13,6 +16,7 @@ interface FormData {
 
 interface Notes{
   notes: {
+    map(arg0: (note: any) => JSX.Element): import("react").ReactNode
     id: string,
     title: string,
     content: string
@@ -31,7 +35,21 @@ const Home = ({notes}: Notes) => {
           "Content-Type": "application/json"
         }, 
         method: "POST"
-      }).then(()=> setForm({title:"" , content:"", id:""}))
+      }).then(()=> {
+        setForm({title:"" , content:"", id:""})
+        refreshData()
+      })
+    }catch(err){
+      console.log(err);
+    }
+  }
+
+  async function deleteNote(id: string) {
+    try{
+      fetch(`http://localhost:3000/api/note/${id}`, {
+        headers: {"Content-Type": "application/json"},
+        method : "DELETE"
+      }).then(() => {refreshData()})
     }catch(err){
       console.log(err);
     }
@@ -44,6 +62,13 @@ const Home = ({notes}: Notes) => {
     catch(err){
       console.log(err)
     }
+  }
+
+  const router = useRouter();
+  // Call this function whenever you want to
+  // refresh props!
+  const refreshData = () => {
+    router.replace(router.asPath);
   }
 
   return (
@@ -81,7 +106,10 @@ const Home = ({notes}: Notes) => {
                       <h3 className='font-bold'>{note.title}</h3>
                       <p className='text-sm'>{note.content}</p>
                     </div>
-                </div>
+                    <button onClick={()=> deleteNote(note.id)} className="bg-red-500 text-white px-3">
+                      X
+                    </button>
+                </div> 
               </li>
             ))}
           </ul>
